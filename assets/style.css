@@ -56,8 +56,8 @@ h1 { font-size: clamp(26px, 5.5vh, 44px); line-height: 1.1; display: flex; flex-
 .tip .t1 { font-weight: 700; margin-bottom: 2px; }
 .tip .t2 { color: var(--muted); margin-bottom: 4px; }
 .tip .t2 em { font-style: normal; color: var(--fg); }
-.tip .row { display: grid; grid-template-columns: 1fr auto auto; gap: 0 14px; }
-.tip .row b { text-align: right; min-width: 3.2em; }
+.tip .row { display: grid; grid-template-columns: 1fr 46px 72px; gap: 0 10px; }
+.tip .row b { text-align: right; }
 .tip .row.head { color: var(--muted); font-size: 11px; margin-bottom: 2px; }
 .tip .row.head b { font-weight: 400; }
 .tip .row.n { color: var(--matches); }

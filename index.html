@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arda Güler · Real Madrid</title>
+<meta name="description" content="Arda Güler's goals, assists and minutes played for Real Madrid, match by match.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>Arda Güler <span class="dot" aria-hidden="true">·</span> <span class="club">Real Madrid</span></h1>
+    <button id="dl" class="dl" type="button" aria-label="Download as image">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M2.5 13.5h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="btxt">Download image</span>
+    </button>
+    <p class="sub">Matches for Real Madrid since the 2023/24 season</p>
+  </header>
+
+  <section class="totals" aria-label="Totals at Real Madrid">
+    <div class="tot n"><span class="num" id="nMatches">0</span><span class="lbl">Matches</span></div>
+    <div class="tot all"><span class="num" id="tGA">0</span><span class="lbl">Goal contributions</span></div>
+    <div class="tot g"><span class="num" id="tG">0</span><span class="lbl">Goals</span></div>
+    <div class="tot a"><span class="num" id="tA">0</span><span class="lbl">Assists</span></div>
+    <div class="tot min"><span class="num" id="tM">0</span><span class="lbl">Minutes</span></div>
+  </section>
+
+  <section class="chart-wrap">
+    <div class="legend">
+      <span class="it"><span class="k ln all"></span>Goal contributions (left axis)</span>
+      <span class="it"><span class="k ln g"></span>Goals</span>
+      <span class="it"><span class="k ln a"></span>Assists</span>
+      <span class="it"><span class="k ln"></span>Minutes (right axis)</span>
+    </div>
+    <div id="chart" class="chart"></div>
+  </section>
+
+  <footer>
+    <span>Data as of <span id="asOf"></span>. Source: Sofascore, Real Madrid matches only. Matches are shown in order; off-season gaps are skipped. Hover, tap or use the arrow keys to browse.</span>
+    <a href="https://x.com/urazdev" target="_blank" rel="noopener noreferrer">@urazdev</a>
+  </footer>
+</main>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

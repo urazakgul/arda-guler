@@ -12,3 +12,6 @@ __pycache__/
 # Data fetching and build scripts (kept local, not published)
 scripts/
 data/raw/
+
+# Claude Code instructions (kept local)
+CLAUDE.md

@@ -108,3 +108,18 @@ header .sub { grid-column: 1 / -1; }
   .tot .num { font-size: 18px; }
   .tot .lbl { font-size: 11px; }
 }
+
+.club { position: relative; display: inline-flex; align-items: center; }
+.club .cur { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .15em; outline: none; -webkit-tap-highlight-color: transparent; }
+.club .cur:hover .txt { color: var(--fg); }
+.club .cur:focus-visible .chev { color: var(--fg); }
+.club .chev { width: .5em; height: .5em; flex: none; transition: transform .15s; }
+.club .cur[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; list-style: none; padding: 4px; min-width: 190px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  font-size: 15px; font-weight: 500; line-height: 1.2; color: var(--fg); }
+.menu[hidden] { display: none; }
+.menu li { padding: 9px 12px; border-radius: 7px; cursor: pointer; outline: none; display: flex; justify-content: space-between; align-items: center; }
+.menu li:hover, .menu li:focus { background: var(--bg); }
+.menu li[aria-selected="true"]::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gc); }

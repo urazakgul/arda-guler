@@ -3,33 +3,108 @@
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var DAY = 86400000;
 
-  var matches = DATA.matches.map(function (m) {
-    var p = m.d.split("-");
-    var t = Date.UTC(+p[0], +p[1] - 1, +p[2]);
-    return Object.assign({ t: t }, m);
-  }).sort(function (a, b) { return a.t - b.t; });
-
-  var cg = 0, ca = 0, cm = 0;
-  matches.forEach(function (m) {
-    cg += m.g; ca += m.a; cm += m.m;
-    m.cg = cg; m.ca = ca; m.cm = cm;
+  var teams = DATA.teams.map(function (team) {
+    var cg = 0, ca = 0, cm = 0, cn = 0;
+    var list = team.matches.map(function (m) {
+      var p = m.d.split("-");
+      return Object.assign({ t: Date.UTC(+p[0], +p[1] - 1, +p[2]) }, m);
+    }).sort(function (a, b) { return a.t - b.t; });
+    list.forEach(function (m) {
+      cg += m.g; ca += m.a; cm += m.m; cn += m.p;
+      m.cg = cg; m.ca = ca; m.cm = cm; m.cn = cn;
+    });
+    return { id: team.id, name: team.name, kind: team.kind, matches: list, totG: cg, totA: ca, totM: cm, totN: cn };
   });
-  var totG = cg, totA = ca, totM = cm;
+
+  var team, matches, totG, totA, totM, totN, sel;
 
   function fmt(n) { return n.toLocaleString("en-US"); }
   function dateStr(t) {
     var d = new Date(t);
     return d.getUTCDate() + " " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear();
   }
-  document.getElementById("tG").textContent = totG;
-  document.getElementById("tA").textContent = totA;
-  document.getElementById("tGA").textContent = totG + totA;
-  document.getElementById("tM").textContent = fmt(totM);
-  document.getElementById("nMatches").textContent = matches.length;
-  document.getElementById("asOf").textContent = DATA.asOf;
+  function seasonOf(t) {
+    var d = new Date(t), y = d.getUTCFullYear();
+    if (d.getUTCMonth() < 6) y -= 1;
+    return y + "/" + String(y + 1).slice(2);
+  }
+  function subText() {
+    var first = matches[0].t, last = matches[matches.length - 1].t;
+    var cur = Date.now() - last < 120 * DAY;
+    if (team.kind === "national") {
+      var d = new Date(first);
+      return "Official matches for " + team.name + " since " + MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear();
+    }
+    var a = seasonOf(first), b = seasonOf(last);
+    if (cur) return "Official matches for " + team.name + " since the " + a + " season";
+    return "Official matches for " + team.name + (a === b ? " in the " + a + " season" : ", " + a + " to " + b + " seasons");
+  }
 
   var host = document.getElementById("chart");
-  var sel = matches.length - 1;
+  var btn = document.getElementById("teamBtn");
+  var menu = document.getElementById("teamMenu");
+  var items = teams.map(function (t) {
+    var li = document.createElement("li");
+    li.setAttribute("role", "option");
+    li.tabIndex = -1;
+    li.dataset.id = t.id;
+    li.textContent = t.name;
+    menu.appendChild(li);
+    return li;
+  });
+  function openMenu() {
+    menu.hidden = false; btn.setAttribute("aria-expanded", "true");
+    var cur = items.filter(function (li) { return li.dataset.id === team.id; })[0];
+    cur.focus();
+  }
+  function closeMenu(refocus) {
+    if (menu.hidden) return;
+    menu.hidden = true; btn.setAttribute("aria-expanded", "false");
+    if (refocus) btn.focus();
+  }
+  function choose(li) { closeMenu(true); setTeam(li.dataset.id, true); }
+  btn.addEventListener("click", function () { menu.hidden ? openMenu() : closeMenu(false); });
+  btn.addEventListener("keydown", function (ev) {
+    if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); openMenu(); }
+  });
+  menu.addEventListener("click", function (ev) {
+    var li = ev.target.closest("li"); if (li) choose(li);
+  });
+  menu.addEventListener("keydown", function (ev) {
+    var i = items.indexOf(document.activeElement);
+    if (ev.key === "ArrowDown") { items[Math.min(items.length - 1, i + 1)].focus(); ev.preventDefault(); }
+    else if (ev.key === "ArrowUp") { items[Math.max(0, i - 1)].focus(); ev.preventDefault(); }
+    else if (ev.key === "Home") { items[0].focus(); ev.preventDefault(); }
+    else if (ev.key === "End") { items[items.length - 1].focus(); ev.preventDefault(); }
+    else if (ev.key === "Enter" || ev.key === " ") { if (i >= 0) choose(items[i]); ev.preventDefault(); }
+    else if (ev.key === "Escape") { closeMenu(true); ev.preventDefault(); }
+    else if (ev.key === "Tab") closeMenu(false);
+  });
+  document.addEventListener("pointerdown", function (ev) {
+    if (!ev.target.closest(".club")) closeMenu(false);
+  });
+
+  function setTeam(id, fromUser) {
+    team = teams.filter(function (t) { return t.id === id; })[0] || teams[0];
+    matches = team.matches; totG = team.totG; totA = team.totA; totM = team.totM; totN = team.totN;
+    sel = matches.length - 1;
+    items.forEach(function (li) { li.setAttribute("aria-selected", li.dataset.id === team.id ? "true" : "false"); });
+    document.getElementById("cur").textContent = team.name;
+    document.getElementById("tG").textContent = totG;
+    document.getElementById("tA").textContent = totA;
+    document.getElementById("tGA").textContent = totG + totA;
+    document.getElementById("tM").textContent = fmt(totM);
+    document.getElementById("nMatches").textContent = totN;
+    document.getElementById("asOf").textContent = DATA.asOf;
+    document.getElementById("src").textContent = team.name;
+    document.querySelector(".sub").textContent = subText();
+    document.querySelector(".totals").setAttribute("aria-label", "Totals for " + team.name);
+    document.title = "Arda Güler · " + team.name;
+    if (fromUser) {
+      try { history.replaceState(null, "", "#" + team.id); } catch (e) {}
+      draw();
+    }
+  }
   var tip = document.createElement("div");
   tip.className = "tip";
   host.appendChild(tip);
@@ -61,7 +136,7 @@
     for (var k = 0; k <= 5; k++) {
       var v = (maxC * k) / 5;
       var y = yC(v);
-      el("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: cLine, "stroke-width": 1 }, svg);
+      el("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: cLine, "stroke-width": 1, "stroke-opacity": 0.55 }, svg);
       var l = el("text", { x: m.l - 6, y: y + 4, "text-anchor": "end", fill: cMuted, "font-size": 11 }, svg);
       l.textContent = Math.round(v);
     }
@@ -77,7 +152,7 @@
     for (var i = step - 1; i < n; i += step) if (i - 0 >= step / 2) ticks.push(i);
     ticks.forEach(function (i) {
       var px = x(i), d = new Date(matches[i].t);
-      el("line", { x1: px, x2: px, y1: m.t, y2: m.t + ih + 4, stroke: cLine, "stroke-width": 1 }, svg);
+      el("line", { x1: px, x2: px, y1: m.t, y2: m.t + ih + 4, stroke: cLine, "stroke-width": 1, "stroke-opacity": 0.55 }, svg);
       var anchor = i === 0 ? "start" : (px > W - m.r - 40 ? "end" : "middle");
       var lb = el("text", { x: px, y: H - 8, "text-anchor": anchor, fill: cMuted, "font-size": 11 }, svg);
       lb.textContent = MONTHS[d.getUTCMonth()] + " ’" + String(d.getUTCFullYear()).slice(2);
@@ -140,11 +215,13 @@
 
   function renderTip(compact) {
     var r = matches[sel];
-    var teams = r.v === "H" ? "Real Madrid " + r.f + "–" + r.x + " " + r.o
-                            : r.o + " " + r.x + "–" + r.f + " Real Madrid";
+    var score = r.v === "H" ? team.name + " " + r.f + "–" + r.x + " " + r.o
+                            : r.o + " " + r.x + "–" + r.f + " " + team.name;
+    var mins = !r.p ? "–" : r.m ? r.m + "'" : "n/a";
+    var note = !r.p ? "did not play" : r.e;
     if (compact) {
-      var cols = [["n", "Matches", 1, sel + 1], ["all", "G+A", r.g + r.a, r.cg + r.ca], ["g", "Goals", r.g, r.cg],
-        ["a", "Assists", r.a, r.ca], ["min", "Min", r.m + "'", fmt(r.cm) + "'"]];
+      var cols = [["n", "Matches", r.p, r.cn], ["all", "G+A", r.g + r.a, r.cg + r.ca], ["g", "Goals", r.g, r.cg],
+        ["a", "Assists", r.a, r.ca], ["min", "Min", mins, fmt(r.cm) + "'"]];
       function cells(i, lead) {
         return "<span>" + lead + "</span>" + cols.map(function (c) {
           return '<b class="' + c[0] + '">' + (i === 0 ? c[1] : c[i + 1]) + "</b>";
@@ -152,7 +229,7 @@
       }
       tip.innerHTML =
         '<div class="t1">' + dateStr(r.t) + " · " + r.c + "</div>" +
-        '<div class="t2">' + teams + (r.e ? " <em>(" + r.e + ")</em>" : "") + "</div>" +
+        '<div class="t2">' + score + (note ? " <em>(" + note + ")</em>" : "") + "</div>" +
         '<div class="cg hd">' + cells(0, "") + "</div>" +
         '<div class="cg">' + cells(1, "Match") + "</div>" +
         '<div class="cg">' + cells(2, "Total") + "</div>";
@@ -163,13 +240,13 @@
     }
     tip.innerHTML =
       '<div class="t1">' + dateStr(r.t) + " · " + r.c + "</div>" +
-      '<div class="t2">' + teams + (r.e ? " <em>(" + r.e + ")</em>" : "") + "</div>" +
+      '<div class="t2">' + score + (note ? " <em>(" + note + ")</em>" : "") + "</div>" +
       '<div class="row head"><span></span><b>Match</b><b>Cumulative</b></div>' +
-      row("n", "Matches", 1, sel + 1) +
+      row("n", "Matches", r.p, r.cn) +
       row("all", "Goal contributions", r.g + r.a, r.cg + r.ca) +
       row("g", "Goals", r.g, r.cg) +
       row("a", "Assists", r.a, r.ca) +
-      row("min", "Minutes", r.m + "'", fmt(r.cm) + "'");
+      row("min", "Minutes", mins, fmt(r.cm) + "'");
   }
 
   function pick(i) {
@@ -199,7 +276,7 @@
     ctx.fillText(name, PAD, PAD + 40);
     var nw = ctx.measureText(name + " ").width;
     ctx.font = "500 44px " + FONT; ctx.fillStyle = cMuted;
-    ctx.fillText("\u00b7 Real Madrid", PAD + nw, PAD + 40);
+    ctx.fillText("\u00b7 " + team.name, PAD + nw, PAD + 40);
     ctx.font = "400 18px " + FONT;
     ctx.fillText(document.querySelector(".sub").textContent, PAD, PAD + 72);
 
@@ -237,14 +314,14 @@
     img.onload = function () {
       ctx.drawImage(img, cx, cy, cw, ch);
       ctx.font = "400 14px " + FONT; ctx.fillStyle = cMuted;
-      ctx.fillText("Data as of " + DATA.asOf + ". Source: Sofascore, Real Madrid matches only. " +
+      ctx.fillText("Data as of " + DATA.asOf + ". Source: Sofascore, " + team.name + " matches only. " +
         "Matches are shown in order; off-season gaps are skipped.", PAD, VH - 24);
       ctx.font = "700 20px " + FONT; ctx.fillStyle = cFg;
       ctx.textAlign = "right"; ctx.fillText("@urazdev", VW - PAD, VH - 24); ctx.textAlign = "left";
       cv.toBlob(function (blob) {
         var a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "arda-guler-real-madrid.png";
+        a.download = "arda-guler-" + team.id + ".png";
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
       }, "image/png");
@@ -261,6 +338,9 @@
     if (ev.key === "End") { pick(matches.length - 1); ev.preventDefault(); }
   });
 
+  window.addEventListener("hashchange", function () { setTeam(location.hash.slice(1), true); });
+
+  setTeam(location.hash.slice(1), false);
   draw();
   if (window.ResizeObserver) new ResizeObserver(draw).observe(host);
   else window.addEventListener("resize", draw);

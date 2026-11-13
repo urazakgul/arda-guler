@@ -116,10 +116,10 @@ header .sub { grid-column: 1 / -1; }
 .club .cur:focus-visible .chev { color: var(--fg); }
 .club .chev { width: .5em; height: .5em; flex: none; transition: transform .15s; }
 .club .cur[aria-expanded="true"] .chev { transform: rotate(180deg); }
-.menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; list-style: none; padding: 4px; min-width: 190px;
+.menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; list-style: none; padding: 4px; width: max-content; min-width: 100%; white-space: nowrap;
   background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.3);
   font-size: 15px; font-weight: 500; line-height: 1.2; color: var(--fg); }
 .menu[hidden] { display: none; }
-.menu li { padding: 9px 12px; border-radius: 7px; cursor: pointer; outline: none; display: flex; justify-content: space-between; align-items: center; }
+.menu li { padding: 9px 12px; border-radius: 7px; cursor: pointer; outline: none; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
 .menu li:hover, .menu li:focus { background: var(--bg); }
 .menu li[aria-selected="true"]::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gc); }
